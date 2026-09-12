@@ -1,0 +1,13 @@
+
+# Activity 3b: Products target added to the Activity 3 gateway. The connection
+# is already registered by Activity 3a; here we just declare the additional AVP
+# resource id (so pre-authorization knows this gateway can expose Products) and
+# extend the system prompt.
+add_group_resource_ids("activity3_sales_products_reviews", ["Products-API-Gateway"])
+
+system_prompt = system_prompt + """
+
+- **Products retrieval**:
+   - Retrieve  information about Products in the catalog
+   - Do not return information about Product information other than from this tool
+"""

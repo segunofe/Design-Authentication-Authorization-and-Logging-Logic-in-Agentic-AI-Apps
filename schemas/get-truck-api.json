@@ -1,0 +1,390 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Get Truck API",
+    "description": "API for querying truck information from the fleet management system",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{apiGatewayUrl}",
+      "description": "API Gateway endpoint",
+      "variables": {
+        "apiGatewayUrl": {
+          "default": "https://api.example.com/dev"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/trucks": {
+      "get": {
+        "summary": "Retrieve truck information",
+        "description": "Fetches truck data with optional filtering by truck ID, location, capacity, or brand",
+        "operationId": "getTrucks",
+        "parameters": [
+          {
+            "name": "truck_id",
+            "in": "query",
+            "description": "Filter by specific truck ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^TRK\\d{3}$",
+              "example": "TRK001"
+            }
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "description": "Filter trucks by location (uses LocationIndex GSI)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Phoenix, 85043, AZ"
+            }
+          },
+          {
+            "name": "capacity",
+            "in": "query",
+            "description": "Filter trucks by capacity (uses CapacityIndex GSI)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["5 metric tons", "15 metric tons", "33 metric tons"],
+              "example": "33 metric tons"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Filter trucks by brand (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Volvo"
+            }
+          },
+          {
+            "name": "checked_after",
+            "in": "query",
+            "description": "Filter trucks with mechanical check after this date (dd-Month-yyyy format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{2}-[A-Za-z]+-\\d{4}$",
+              "example": "01-January-2024"
+            }
+          },
+          {
+            "name": "checked_before",
+            "in": "query",
+            "description": "Filter trucks with mechanical check before this date (dd-Month-yyyy format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{2}-[A-Za-z]+-\\d{4}$",
+              "example": "31-December-2024"
+            }
+          },
+          {
+            "name": "maintenance_due",
+            "in": "query",
+            "description": "Show only trucks due for maintenance (check older than specified days)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "example": 90
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of trucks to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Truck data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TruckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No trucks found matching the criteria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trucks/{truck_id}": {
+      "get": {
+        "summary": "Retrieve specific truck by ID",
+        "description": "Fetches detailed information for a specific truck using primary key",
+        "operationId": "getTruckById",
+        "parameters": [
+          {
+            "name": "truck_id",
+            "in": "path",
+            "description": "Unique truck identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^TRK\\d{3}$",
+              "example": "TRK001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Truck data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Truck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid truck ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Truck not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TruckResponse": {
+        "type": "object",
+        "properties": {
+          "trucks": {
+            "type": "array",
+            "description": "List of trucks",
+            "items": {
+              "$ref": "#/components/schemas/Truck"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of trucks returned",
+            "example": 12
+          },
+          "filters_applied": {
+            "type": "object",
+            "description": "Filters that were applied to the query",
+            "properties": {
+              "truck_id": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "capacity": {
+                "type": "string"
+              },
+              "brand": {
+                "type": "string"
+              },
+              "checked_after": {
+                "type": "string"
+              },
+              "checked_before": {
+                "type": "string"
+              },
+              "maintenance_due": {
+                "type": "integer"
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "description": "Summary statistics",
+            "properties": {
+              "by_location": {
+                "type": "object",
+                "description": "Trucks count by location",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "example": {
+                  "Phoenix, 85043, AZ": 2,
+                  "Chicago, 60827, IL": 3
+                }
+              },
+              "by_capacity": {
+                "type": "object",
+                "description": "Trucks count by capacity",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "example": {
+                  "5 metric tons": 4,
+                  "15 metric tons": 6,
+                  "33 metric tons": 2
+                }
+              },
+              "by_brand": {
+                "type": "object",
+                "description": "Trucks count by brand",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "example": {
+                  "Volvo": 3,
+                  "Scania": 2,
+                  "Mercedes-Benz": 1
+                }
+              },
+              "maintenance_due_count": {
+                "type": "integer",
+                "description": "Number of trucks due for maintenance",
+                "example": 2
+              }
+            }
+          }
+        },
+        "required": ["trucks", "count"]
+      },
+      "Truck": {
+        "type": "object",
+        "properties": {
+          "truck_id": {
+            "type": "string",
+            "description": "Unique truck identifier",
+            "pattern": "^TRK\\d{3}$",
+            "example": "TRK001"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Truck manufacturer brand",
+            "example": "Volvo"
+          },
+          "capacity": {
+            "type": "string",
+            "description": "Truck capacity in metric tons format",
+            "enum": ["5 metric tons", "15 metric tons", "33 metric tons"],
+            "example": "33 metric tons"
+          },
+          "location": {
+            "type": "string",
+            "description": "Truck's current location in format: city, zip code, state",
+            "example": "Phoenix, 85043, AZ"
+          },
+          "last_mechanical_check": {
+            "type": "string",
+            "description": "Date of last mechanical check in dd-Month-yyyy format",
+            "pattern": "^\\d{2}-[A-Za-z]+-\\d{4}$",
+            "example": "22-September-2024"
+          },
+          "capacity_numeric": {
+            "type": "integer",
+            "description": "Numeric capacity value (computed field)",
+            "example": 33
+          },
+          "days_since_check": {
+            "type": "integer",
+            "description": "Days since last mechanical check (computed field)",
+            "example": 45
+          },
+          "maintenance_status": {
+            "type": "string",
+            "description": "Maintenance status based on last check date (computed field)",
+            "enum": ["current", "due_soon", "overdue"],
+            "example": "current"
+          },
+          "next_check_due": {
+            "type": "string",
+            "description": "Estimated next check due date (computed field)",
+            "example": "22-March-2025"
+          }
+        },
+        "required": ["truck_id", "brand", "capacity", "location", "last_mechanical_check"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error description"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

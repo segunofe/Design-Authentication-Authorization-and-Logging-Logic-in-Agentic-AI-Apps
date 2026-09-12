@@ -1,0 +1,29 @@
+
+# Activity 4: External Inventory MCP server (AnyCompany-Inventory-Tool gateway),
+# reached through AgentCore Identity (M2M). The Cognito client_id/client_secret
+# are NOT stored here; they live in the AgentCore Identity vault behind the
+# named OAuth2 credential provider. The connection is opened per request, gated
+# by AVP when Activity 5 is enabled.
+ACTIVITY4_OAUTH_PROVIDER_NAME = "###ACTIVITY4_OAUTH_PROVIDER_NAME###"
+ACTIVITY4_GATEWAY_URL = "###ACTIVITY4_GATEWAY_URL###"
+ACTIVITY4_SCOPES = ["inventory-api/read"]
+
+register_tool_group(
+    name="activity4_inventory",
+    connect=lambda: MCPClient(
+        lambda: create_streamable_http_transport_agentcore_identity(
+            mcp_url=ACTIVITY4_GATEWAY_URL,
+            provider_name=ACTIVITY4_OAUTH_PROVIDER_NAME,
+            scopes=ACTIVITY4_SCOPES,
+        )
+    ),
+    resource_ids=["Inventory-MCP-Target"],
+)
+logger.info("Activity 4 Inventory tool registered (AgentCore Identity M2M)")
+
+system_prompt = system_prompt + """
+- **Inventory Management**:
+  - Retrieve inventory information using the external inventory MCP server
+  - Check stock levels and product availability
+  - Do not return inventory information from any other source
+"""

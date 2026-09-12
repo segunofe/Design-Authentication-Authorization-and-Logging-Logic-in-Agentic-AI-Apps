@@ -1,0 +1,163 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "View Product Catalog API",
+    "description": "API for viewing product catalog with optional filtering by brand or product name",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{apiGatewayUrl}",
+      "description": "API Gateway endpoint",
+      "variables": {
+        "apiGatewayUrl": {
+          "default": "https://api.example.com/dev"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Retrieve product catalog",
+        "description": "Fetches products with optional filtering by brand or product name",
+        "operationId": "viewProductCatalog",
+        "parameters": [
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Filter products by brand name",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "happyToys"
+            }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "description": "Filter products by product name (contains search)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Car"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product catalog retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCatalogResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProductCatalogResponse": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "description": "List of products matching the filter criteria",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of products returned",
+            "example": 3
+          },
+          "filters_applied": {
+            "type": "object",
+            "description": "Filters that were applied to the query",
+            "properties": {
+              "brand": {
+                "type": "string",
+                "nullable": true,
+                "example": "happyToys"
+              },
+              "product": {
+                "type": "string",
+                "nullable": true,
+                "example": "Car"
+              }
+            }
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "Unique product identifier",
+            "example": "PROD001"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Product brand name",
+            "example": "happyToys"
+          },
+          "product": {
+            "type": "string",
+            "description": "Product name",
+            "example": "RC Car"
+          },
+          "price": {
+            "type": "number",
+            "description": "Product price",
+            "minimum": 0,
+            "example": 1000
+          },
+          "color": {
+            "type": "string",
+            "description": "Product color",
+            "example": "red"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message"
+          }
+        }
+      }
+    }
+  }
+}

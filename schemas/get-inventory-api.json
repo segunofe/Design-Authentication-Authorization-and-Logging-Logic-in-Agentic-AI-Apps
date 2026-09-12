@@ -1,0 +1,156 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Get Inventory API",
+    "description": "API for querying inventory from supplier systems",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{apiGatewayUrl}",
+      "description": "API Gateway endpoint"
+    }
+  ],
+  "paths": {
+    "/inventory": {
+      "get": {
+        "summary": "Retrieve inventory information",
+        "description": "Fetches inventory data with optional product filtering",
+        "operationId": "getInventory",
+        "security": [
+          {
+            "CognitoOAuth2": ["inventory-api/read"]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "product_id",
+            "in": "query",
+            "description": "Filter inventory by specific product ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "PROD001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "CognitoOAuth2": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "OAuth2 Bearer token from Cognito"
+      }
+    },
+    "schemas": {
+      "InventoryResponse": {
+        "type": "object",
+        "properties": {
+          "inventory": {
+            "type": "array",
+            "description": "List of inventory items",
+            "items": {
+              "$ref": "#/components/schemas/InventoryItem"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of inventory items returned",
+            "example": 5
+          }
+        }
+      },
+      "InventoryItem": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "Associated product identifier",
+            "example": "PROD001"
+          },
+          "product_name": {
+            "type": "string",
+            "description": "Product name",
+            "example": "RC Car - Red Racer"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Available quantity",
+            "minimum": 0,
+            "example": 50
+          },
+          "supplier_id": {
+            "type": "string",
+            "description": "Supplier identifier",
+            "example": "SUP001"
+          },
+          "supplier_name": {
+            "type": "string",
+            "description": "Supplier name",
+            "example": "ToyMakers Inc"
+          },
+          "warehouse_location": {
+            "type": "string",
+            "description": "Warehouse location",
+            "example": "Warehouse A"
+          },
+          "unit_cost": {
+            "type": "number",
+            "description": "Unit cost",
+            "example": 65.00
+          },
+          "reorder_level": {
+            "type": "integer",
+            "description": "Reorder level threshold",
+            "example": 10
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    }
+  }
+}

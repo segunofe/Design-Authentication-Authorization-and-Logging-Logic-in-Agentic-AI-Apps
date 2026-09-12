@@ -1,0 +1,327 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Get Driver API",
+    "description": "API for querying driver information from the driver management system",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{apiGatewayUrl}",
+      "description": "API Gateway endpoint",
+      "variables": {
+        "apiGatewayUrl": {
+          "default": "https://api.example.com/dev"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/drivers": {
+      "get": {
+        "summary": "Retrieve driver information",
+        "description": "Fetches driver data with optional filtering by driver ID, location, or name",
+        "operationId": "getDrivers",
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "query",
+            "description": "Filter by specific driver ID",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^DRV\\d{3}$",
+              "example": "DRV001"
+            }
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "description": "Filter drivers by location (uses LocationIndex GSI)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Phoenix, 85043, AZ"
+            }
+          },
+          {
+            "name": "firstname",
+            "in": "query",
+            "description": "Filter drivers by first name (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "John"
+            }
+          },
+          {
+            "name": "lastname",
+            "in": "query",
+            "description": "Filter drivers by last name (partial match)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Smith"
+            }
+          },
+          {
+            "name": "hired_after",
+            "in": "query",
+            "description": "Filter drivers hired after this date (dd-Month-yyyy format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{2}-[A-Za-z]+-\\d{4}$",
+              "example": "01-January-2020"
+            }
+          },
+          {
+            "name": "hired_before",
+            "in": "query",
+            "description": "Filter drivers hired before this date (dd-Month-yyyy format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{2}-[A-Za-z]+-\\d{4}$",
+              "example": "31-December-2023"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of drivers to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Driver data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DriverResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No drivers found matching the criteria",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/drivers/{driver_id}": {
+      "get": {
+        "summary": "Retrieve specific driver by ID",
+        "description": "Fetches detailed information for a specific driver using primary key",
+        "operationId": "getDriverById",
+        "parameters": [
+          {
+            "name": "driver_id",
+            "in": "path",
+            "description": "Unique driver identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^DRV\\d{3}$",
+              "example": "DRV001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Driver data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Driver"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid driver ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Driver not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DriverResponse": {
+        "type": "object",
+        "properties": {
+          "drivers": {
+            "type": "array",
+            "description": "List of drivers",
+            "items": {
+              "$ref": "#/components/schemas/Driver"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of drivers returned",
+            "example": 15
+          },
+          "filters_applied": {
+            "type": "object",
+            "description": "Filters that were applied to the query",
+            "properties": {
+              "driver_id": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string"
+              },
+              "firstname": {
+                "type": "string"
+              },
+              "lastname": {
+                "type": "string"
+              },
+              "hired_after": {
+                "type": "string"
+              },
+              "hired_before": {
+                "type": "string"
+              }
+            }
+          },
+          "locations_summary": {
+            "type": "object",
+            "description": "Summary of drivers by location",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "example": {
+              "Phoenix, 85043, AZ": 3,
+              "Chicago, 60827, IL": 2
+            }
+          }
+        },
+        "required": ["drivers", "count"]
+      },
+      "Driver": {
+        "type": "object",
+        "properties": {
+          "driver_id": {
+            "type": "string",
+            "description": "Unique driver identifier",
+            "pattern": "^DRV\\d{3}$",
+            "example": "DRV001"
+          },
+          "firstname": {
+            "type": "string",
+            "description": "Driver's first name",
+            "example": "John"
+          },
+          "lastname": {
+            "type": "string",
+            "description": "Driver's last name",
+            "example": "Smith"
+          },
+          "location": {
+            "type": "string",
+            "description": "Driver's assigned location in format: city, zip code, state",
+            "example": "Phoenix, 85043, AZ"
+          },
+          "hiring_date": {
+            "type": "string",
+            "description": "Date when driver was hired in dd-Month-yyyy format",
+            "pattern": "^\\d{2}-[A-Za-z]+-\\d{4}$",
+            "example": "15-March-2022"
+          },
+          "full_name": {
+            "type": "string",
+            "description": "Driver's full name (computed field)",
+            "example": "John Smith"
+          },
+          "years_of_service": {
+            "type": "number",
+            "description": "Years of service (computed field)",
+            "example": 2.5
+          }
+        },
+        "required": ["driver_id", "firstname", "lastname", "location", "hiring_date"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error description"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "View Sales API",
+    "description": "API for viewing sales records",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "{apiGatewayUrl}",
+      "description": "API Gateway endpoint",
+      "variables": {}
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Retrieve sales records",
+        "description": "Fetches sales records based on user role and team permissions",
+        "operationId": "viewSales",
+        "responses": {
+          "200": {
+            "description": "Sales records retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewSalesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ViewSalesResponse": {
+        "type": "object",
+        "properties": {
+          "sales": {
+            "type": "array",
+            "description": "List of sales records",
+            "items": {
+              "$ref": "#/components/schemas/SalesRecord"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of sales records returned",
+            "example": 5
+          },
+          "user_role": {
+            "type": "string",
+            "description": "Role of the requesting user",
+            "enum": [
+              "Admin",
+              "Manager",
+              "User"
+            ],
+            "example": "Admin"
+          },
+          "user_team": {
+            "type": "string",
+            "description": "Team of the requesting user",
+            "example": "US-East"
+          }
+        }
+      },
+      "SalesRecord": {
+        "type": "object",
+        "properties": {
+          "sale_id": {
+            "type": "string",
+            "description": "Unique sale identifier",
+            "example": "SALE12AB34CD"
+          },
+          "customername": {
+            "type": "string",
+            "description": "Customer name",
+            "example": "John Doe"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Sale date in ISO format",
+            "example": "2025-10-02T14:30:00.000Z"
+          },
+          "total_amount": {
+            "type": "number",
+            "description": "Total sale amount",
+            "example": 2000
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Total quantity sold",
+            "example": 2
+          },
+          "items": {
+            "type": "array",
+            "description": "Items in the sale",
+            "items": {
+              "$ref": "#/components/schemas/SaleItem"
+            }
+          },
+          "created_by": {
+            "type": "string",
+            "description": "User who created the sale",
+            "example": "sarah.johnson"
+          }
+        }
+      },
+      "SaleItem": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "example": "PROD001"
+          },
+          "quantity": {
+            "type": "integer",
+            "example": 2
+          },
+          "price": {
+            "type": "number",
+            "example": 1000
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      }
+    }
+  }
+}

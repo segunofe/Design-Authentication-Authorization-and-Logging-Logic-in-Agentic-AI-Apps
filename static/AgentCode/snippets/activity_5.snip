@@ -1,0 +1,7 @@
+
+# Activity 5: enable Amazon Verified Permissions dynamic tool filtering.
+# Authorization now happens per request BEFORE connecting to a gateway, so
+# outbound tokens are only minted for tool groups the calling user is allowed
+# to use, and the tool list passed to the model is filtered to the allowed set.
+set_avp_policy_store("###ACTIVITY5_POLICY_STORE###")
+logger.info("Activity 5 dynamic tool filtering enabled (AVP policy store set)")

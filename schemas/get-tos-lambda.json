@@ -1,0 +1,26 @@
+{
+    "name": "get-tos-lambda",
+    "description": "Retrieves Terms of Service (TOS) clause details for specific clause types including Refund, Delivery, and Payment policies",
+    "inputSchema": {
+        "type": "object",
+        "description": "Input parameters for retrieving TOS clause information",
+        "properties": {
+            "clause_type": {
+                "type": "string",
+                "description": "The type of Terms of Service clause to retrieve. Must be one of: Refund, Delivery, or Payment"
+            }
+        },
+        "required": ["clause_type"]
+    },
+    "outputSchema": {
+        "type": "object",
+        "description": "Response containing the requested TOS clause details",
+        "properties": {
+            "clause_details": {
+                "type": "string",
+                "description": "The detailed text content of the requested Terms of Service clause"
+            }
+        },
+        "required": ["clause_details"]
+    }
+}

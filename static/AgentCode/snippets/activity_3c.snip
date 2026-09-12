@@ -1,0 +1,12 @@
+
+# Activity 3c: Customer Reviews target added to the Activity 3 gateway. The
+# connection is already registered by Activity 3a; here we just declare the
+# additional AVP resource id and extend the system prompt.
+add_group_resource_ids("activity3_sales_products_reviews", ["Customer-Reviews-Table"])
+
+system_prompt = system_prompt + """
+
+- **Customer Reviews retrieval**:
+   - Retrieve  information about Customer Reviews from the DynamoDB table "sec307-agent-identity-customer-reviews"
+   - Do not return information about Customer Reviews other than from this tool
+"""
