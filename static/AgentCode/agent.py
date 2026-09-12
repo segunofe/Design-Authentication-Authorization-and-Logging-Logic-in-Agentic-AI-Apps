@@ -382,26 +382,136 @@ def build_session_tools(context, stack):
 
 ''' START OF ACTIVITY 2'''
 
+# Activity 2: Terms of Service tool (AnyCompany-ToS-Tool gateway, SigV4/IAM
+# inbound auth). Registered as a tool group; the connection is opened per
+# request in build_session_tools, gated by AVP when Activity 5 is enabled.
+ACTIVITY2_GATEWAY_URL = "https://anycompany-tos-tool-pae3hou48l.gateway.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+
+register_tool_group(
+    name="activity2_tos",
+    connect=lambda: MCPClient(
+        lambda: create_streamable_http_transport_sigv4(
+            mcp_url=ACTIVITY2_GATEWAY_URL,
+            service_name="bedrock-agentcore",
+            region="us-east-1",
+        )
+    ),
+    resource_ids=["ToS-Lambda"],
+)
+logger.info("Activity 2 Terms of Service tool registered")
+
+system_prompt = system_prompt + """
+
+- **Terms of Service and Policies retrieval**:
+   - Retrieve terms and conditions about refund, delivery, and payment using the corresponding tool
+   - Do not return information about refund, delivery, and payment other than from this tool
+
+"""
 '''END OF ACTIVITY 2'''
 
 '''START OF ACTIVITY 3a'''
 
+# Activity 3a: Sales tool on the AnyCompany-Sales-Product-Reviews gateway,
+# reached through AgentCore Identity (M2M). The Cognito client_id/client_secret
+# are NOT stored here; they live in the AgentCore Identity vault behind the
+# named OAuth2 credential provider. Activities 3b/3c add their targets to this
+# same gateway group. The connection is opened per request, gated by AVP.
+ACTIVITY3_OAUTH_PROVIDER_NAME = "sales-mcp-oauth-client"
+ACTIVITY3_GATEWAY_URL = "https://anycompany-sales-product-reviews-tool-ymoltnlxtj.gateway.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+ACTIVITY3_SCOPES = ["sales/read"]
+
+register_tool_group(
+    name="activity3_sales_products_reviews",
+    connect=lambda: MCPClient(
+        lambda: create_streamable_http_transport_agentcore_identity(
+            mcp_url=ACTIVITY3_GATEWAY_URL,
+            provider_name=ACTIVITY3_OAUTH_PROVIDER_NAME,
+            scopes=ACTIVITY3_SCOPES,
+        )
+    ),
+    resource_ids=["Sales-API-Gateway"],
+)
+logger.info("Activity 3a Sales tool registered (AgentCore Identity M2M)")
+
+system_prompt = system_prompt + """
+
+- **Sales retrieval**:
+   - Retrieve information about Sales done recently
+   - Do not return information about Sales information other than from this tool
+"""
 '''END OF ACTIVITY 3a'''
 
 '''START OF ACTIVITY 3b'''
 
+# Activity 3b: Products target added to the Activity 3 gateway. The connection
+# is already registered by Activity 3a; here we just declare the additional AVP
+# resource id (so pre-authorization knows this gateway can expose Products) and
+# extend the system prompt.
+add_group_resource_ids("activity3_sales_products_reviews", ["Products-API-Gateway"])
+
+system_prompt = system_prompt + """
+
+- **Products retrieval**:
+   - Retrieve  information about Products in the catalog
+   - Do not return information about Product information other than from this tool
+"""
 '''END OF ACTIVITY 3b'''
 
 '''START OF ACTIVITY 3c'''
 
+# Activity 3c: Customer Reviews target added to the Activity 3 gateway. The
+# connection is already registered by Activity 3a; here we just declare the
+# additional AVP resource id and extend the system prompt.
+add_group_resource_ids("activity3_sales_products_reviews", ["Customer-Reviews-Table"])
+
+system_prompt = system_prompt + """
+
+- **Customer Reviews retrieval**:
+   - Retrieve  information about Customer Reviews from the DynamoDB table "sec307-agent-identity-customer-reviews"
+   - Do not return information about Customer Reviews other than from this tool
+"""
 '''END OF ACTIVITY 3c'''
 
 '''START OF ACTIVITY 4'''
 
+# Activity 4: External Inventory MCP server (AnyCompany-Inventory-Tool gateway),
+# reached through AgentCore Identity (M2M). The Cognito client_id/client_secret
+# are NOT stored here; they live in the AgentCore Identity vault behind the
+# named OAuth2 credential provider. The connection is opened per request, gated
+# by AVP when Activity 5 is enabled.
+ACTIVITY4_OAUTH_PROVIDER_NAME = "inventory-mcp-oauth-client"
+ACTIVITY4_GATEWAY_URL = "https://anycompany-inventory-tool-buegd18u8d.gateway.bedrock-agentcore.us-east-1.amazonaws.com/mcp"
+ACTIVITY4_SCOPES = ["inventory-api/read"]
+
+register_tool_group(
+    name="activity4_inventory",
+    connect=lambda: MCPClient(
+        lambda: create_streamable_http_transport_agentcore_identity(
+            mcp_url=ACTIVITY4_GATEWAY_URL,
+            provider_name=ACTIVITY4_OAUTH_PROVIDER_NAME,
+            scopes=ACTIVITY4_SCOPES,
+        )
+    ),
+    resource_ids=["Inventory-MCP-Target"],
+)
+logger.info("Activity 4 Inventory tool registered (AgentCore Identity M2M)")
+
+system_prompt = system_prompt + """
+- **Inventory Management**:
+  - Retrieve inventory information using the external inventory MCP server
+  - Check stock levels and product availability
+  - Do not return inventory information from any other source
+"""
 '''END OF ACTIVITY 4'''
 
 '''START OF ACTIVITY 5'''
 
+# Activity 5: enable Amazon Verified Permissions dynamic tool filtering.
+# Authorization now happens per request BEFORE connecting to a gateway, so
+# outbound tokens are only minted for tool groups the calling user is allowed
+# to use, and the tool list passed to the model is filtered to the allowed set.
+set_avp_policy_store("74MkwWeGT1PpFY6Jai4kgt")
+logger.info("Activity 5 dynamic tool filtering enabled (AVP policy store set)")
 '''END OF ACTIVITY 5'''
 
 '''START OF ACTIVITY 6'''

@@ -1,0 +1,23 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: Self-recursive spec
+basePath: /v1
+paths:
+  /files:
+    get:
+      summary: List files
+      operationId: listFiles
+      responses:
+        "200":
+          description: A file
+          schema:
+            $ref: '#/definitions/File'
+definitions:
+  File:
+    type: object
+    properties:
+      name:
+        type: string
+      parent:
+        $ref: '#/definitions/File'

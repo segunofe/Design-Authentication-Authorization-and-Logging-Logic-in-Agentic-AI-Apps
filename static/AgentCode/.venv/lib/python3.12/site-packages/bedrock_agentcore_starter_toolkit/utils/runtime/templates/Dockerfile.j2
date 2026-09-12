@@ -1,0 +1,50 @@
+FROM ghcr.io/astral-sh/uv:python{{ python_version }}-bookworm-slim
+WORKDIR /app
+
+# All environment variables in one layer
+ENV UV_SYSTEM_PYTHON=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_NO_PROGRESS=1 \
+    PYTHONUNBUFFERED=1 \
+    DOCKER_CONTAINER=1{% if aws_region %} \
+    AWS_REGION={{ aws_region }} \
+    AWS_DEFAULT_REGION={{ aws_region }}{% endif %}{% if memory_id %} \
+    BEDROCK_AGENTCORE_MEMORY_ID={{ memory_id }}{% endif %}{% if memory_name %} \
+    BEDROCK_AGENTCORE_MEMORY_NAME={{ memory_name }}{% endif %}
+
+{% if dependencies_file %}
+{% if dependencies_install_path %}
+COPY {{ dependencies_install_path }} {{ dependencies_install_path }}
+# Install from pyproject.toml directory
+RUN cd {{ dependencies_install_path }} && uv pip install .
+{% else %}
+COPY {{ dependencies_file }} {{ dependencies_file }}
+# Install from requirements file
+RUN uv pip install -r {{ dependencies_file }}
+{% endif %}
+{% endif %}
+
+{% if observability_enabled %}
+RUN uv pip install aws-opentelemetry-distro==0.12.2
+{% endif %}
+
+# Signal that this is running in Docker for host binding logic
+ENV DOCKER_CONTAINER=1
+
+# Create non-root user
+RUN useradd -m -u 1000 bedrock_agentcore
+USER bedrock_agentcore
+
+EXPOSE 9000
+EXPOSE 8000
+EXPOSE 8080
+
+# Copy entire project (respecting .dockerignore)
+COPY . .
+
+# Use the full module path
+{% if observability_enabled %}
+CMD ["opentelemetry-instrument", "python", "-m", "{{ agent_module_path }}"]
+{% else %}
+CMD ["python", "-m", "{{ agent_module_path }}"]
+{% endif %}
