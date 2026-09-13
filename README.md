@@ -5,7 +5,7 @@
 <img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/88617230-6b33-42e6-b1ce-eac053ec476a" />
 https://catalog.us-east-1.prod.workshops.aws/event/dashboard/en-US/workshop
 
-
+----
 I built an AI agent for a fictional retail company ("AnyCompany Retail") using **Amazon Bedrock AgentCore**, based on the AWS Workshop Studio lab found [here](https://catalog.us-east-1.prod.workshops.aws/event/dashboard/en-US/workshop). Starting from a base agent, I progressively extended it with internal and external tools, wired up multiple authentication mechanisms, and finished with role-based dynamic tool filtering so different employee roles see different capabilities.
 
 This README documents what I built at each stage, the architecture decisions involved, and an issues I ran into (and how I fixed it) along the way.
