@@ -22,7 +22,7 @@ I deployed a base AI agent and then incrementally connected it to a set of backe
 
 ### Initial Setup
 
-1. I checked the required dependency to `requirements.txt`.
+1. I confirmed a required dependency in the `requirements.txt`.
 2. I ran the deployment script, which:
    - Creates an ECR repository via a CodeBuild job
    - Deploys the AgentCore Runtime instance and configures an inbound JWT authorizer to protect it
