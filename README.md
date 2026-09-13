@@ -10,7 +10,7 @@ I built an AI agent for a fictional retail company ("AnyCompany Retail") using *
 
 This README documents what I built at each stage, the architecture decisions involved, and an issues I ran into (and how I fixed it) along the way.
 
-The Goal
+**Architectural Overview**
 <img width="975" height="458" alt="image" src="https://github.com/user-attachments/assets/eeddf2e6-3091-4651-b58d-95169333716d" />
 
 
